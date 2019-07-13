@@ -18,5 +18,5 @@ $_LANG["numberfield"] = "Amount must number";
 $_LANG["lowbalance"] = "Your Balance is low";
 $_LANG["refundmessage"] = "         Due to an error, your domain account was not charged and the amount of payment was refunded to your account...";
 $_LANG["inputprice"] = "please insert amount to pay";
-
-
+$_LANG["usernotfound"] = "User Notfound";
+$_LANG["usernotfoundmessage"] = "User with this profile was not found in the Domain panel. Please contact the Subscription Domain section for more information.";

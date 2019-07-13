@@ -21,7 +21,7 @@ function Manage_Domain_config()
     $configarray = array(
         "name" => "Manage Domain",
         "description" => "Manage domain Addond",
-        "version" => "1.0.1",
+        "version" => "1.0.2",
         "author" => "Great world Lovers",
     );
     return $configarray;
@@ -86,62 +86,80 @@ function Manage_Domain_deactivate()
 
 function Manage_Domain_clientarea($vars)
 {
+    $api = new ApiClient();
+
+
     $language = strtolower($_SESSION['Language']);
     $lang = dirname(__FILE__) . DS . 'lang' . DS . $language . '.php';
     if (!file_exists($lang))
         $lang = dirname(__FILE__) . DS . 'lang' . DS . 'farsi.php';
     include($lang);
     $client = Manage_Domain_GetClientsDetails($_SESSION["uid"]);
-    $configs = DB::table("mod_MD_configs")->pluck("value", 'key');
+    $vars['email'] = $client["email"];
+    $result = $api->get()->call("validateUser", $vars);
+    if ($result['result'] == "success") {
+        $configs = DB::table("mod_MD_configs")->pluck("value", 'key');
 
-    if (!isset($_GET["type"]) || $_GET["type"] != "pricetype") {
-        if (!isset($configs["pricetype"]) && $configs["pricetype"] == '') {
-            header('Location: index.php?m=Manage_Domain&Status=error&type=pricetype');
-            die;
+        if (!isset($_GET["type"]) || $_GET["type"] != "pricetype") {
+            if (!isset($configs["pricetype"]) && $configs["pricetype"] == '') {
+                header('Location: index.php?m=Manage_Domain&Status=error&type=pricetype');
+                die;
+            }
         }
+
+        if (isset($_GET["amount"])) {
+            $_GET["amount"] = str_replace(',', '', $_GET["amount"]);
+
+            if (!intval($_GET['amount'])) {
+                header('Location: index.php?m=Manage_Domain&Status=error&balance=intval');
+                die;
+            }
+            $credit = $client["credit"];
+            if ($credit < $_GET["amount"]) {
+                header('Location: index.php?m=Manage_Domain&Status=error&balance=low');
+                die;
+            }
+            $api = DB::table("tblregistrars")->where('registrar', 'Manage_Domain')->pluck('value', 'setting');
+            $configs = DB::table("mod_MD_configs")->pluck('value', 'key');
+            $parameters = [
+                'amount' => $_GET["amount"],
+                'email' => $_GET["email"],
+                'pricetype' => $configs["pricetype"],
+                'ApiUrl' => Manage_Domain_DecryptPassword($api["ApiUrl"])["password"],
+                'ApiKey' => Manage_Domain_DecryptPassword($api["ApiKey"])["password"],
+                'client' => $client
+            ];
+            Manage_Domain_ChargeAccount($parameters);
+        }
+
+        return array(
+            'pagetitle' => $_LANG["title"],
+            'breadcrumb' => array('index.php?m=Manage_Domain' => $_LANG["domain"]),
+            'templatefile' => 'clienthome',
+            'requirelogin' => true,
+            'forcessl' => false,
+            'vars' => array(
+                'status' => $_GET["Status"],
+                'balance' => $_GET["balance"],
+                'type' => $_GET['type'],
+                "lang" => $_LANG,
+                'email' => $client["email"],
+                'userBalance' => $client["credit"],
+                'currency_code' => $client["currency_code"]
+            ),
+        );
+    } else {
+        return array(
+            'pagetitle' => $_LANG["usernotfound"],
+            'breadcrumb' => array('index.php?m=Manage_Domain' => $_LANG["domain"]),
+            'templatefile' => 'error',
+            'requirelogin' => true,
+            'forcessl' => false,
+            'vars' => array(
+                'lang' => $_LANG
+            )
+        );
     }
-
-    if (isset($_GET["amount"])) {
-        $_GET["amount"] = str_replace(',', '', $_GET["amount"]);
-
-        if (!intval($_GET['amount'])) {
-            header('Location: index.php?m=Manage_Domain&Status=error&balance=intval');
-            die;
-        }
-        $credit = $client["credit"];
-        if ($credit < $_GET["amount"]) {
-            header('Location: index.php?m=Manage_Domain&Status=error&balance=low');
-            die;
-        }
-        $api = DB::table("tblregistrars")->where('registrar', 'Manage_Domain')->pluck('value', 'setting');
-        $configs = DB::table("mod_MD_configs")->pluck('value', 'key');
-        $parameters = [
-            'amount' => $_GET["amount"],
-            'email' => $_GET["email"],
-            'pricetype' => $configs["pricetype"],
-            'ApiUrl' => Manage_Domain_DecryptPassword($api["ApiUrl"])["password"],
-            'ApiKey' => Manage_Domain_DecryptPassword($api["ApiKey"])["password"],
-            'client' => $client
-        ];
-        Manage_Domain_ChargeAccount($parameters);
-    }
-
-    return array(
-        'pagetitle' => $_LANG["title"],
-        'breadcrumb' => array('index.php?m=Manage_Domain' => $_LANG["domain"]),
-        'templatefile' => 'clienthome',
-        'requirelogin' => true,
-        'forcessl' => false,
-        'vars' => array(
-            'status' => $_GET["Status"],
-            'balance' => $_GET["balance"],
-            'type' => $_GET['type'],
-            "lang" => $_LANG,
-            'email' => $client["email"],
-            'userBalance' => $client["credit"],
-            'currency_code' => $client["currency_code"]
-        ),
-    );
 }
 
 function Manage_Domain_getBalance()
@@ -197,9 +215,12 @@ function Manage_Domain_GetClientsDetails($id)
 
 function Manage_Domain_ChargeAccount($params)
 {
+
     $minesAccount = Manage_Domain_applycredit($params);
-    $api = new ApiDomain();
+    $api = new ApiClient();
+
     $result = $api->post()->call("chargeAccount", $params);
+
     if ($result["result"] == "success") {
         header('Location: index.php?m=Manage_Domain&Status=success');
         die;
