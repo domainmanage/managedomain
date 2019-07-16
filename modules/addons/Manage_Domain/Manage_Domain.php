@@ -21,7 +21,7 @@ function Manage_Domain_config()
     $configarray = array(
         "name" => "Manage Domain",
         "description" => "Manage domain Addond",
-        "version" => "1.0.2",
+        "version" => "1.0.3",
         "author" => "Great world Lovers",
     );
     return $configarray;
@@ -51,6 +51,15 @@ function Manage_Domain_activate()
                 $table->string('value');
             }
         );
+        DB::schema()->create(
+            'mod_MD_tlds',
+            function ($table) {
+                $table->increments('id');
+                $table->string('tld');
+                $table->integer('systemid');
+                $table->integer('lastupdate');
+            }
+        );
 
         DB::table("mod_MD_configs")->insert([
             "key" => "extrapercent",
@@ -77,6 +86,7 @@ function Manage_Domain_deactivate()
     try {
         DB::schema()->dropIfExists('mod_MD_transactions');
         DB::schema()->dropIfExists('mod_MD_configs');
+        DB::schema()->dropIfExists('mod_MD_tlds');
     } catch (Exception $exception) {
         return array('status' => 'error', 'description' => $exception->getMessage());
     }
