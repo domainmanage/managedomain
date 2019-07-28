@@ -11,14 +11,14 @@ require_once(dirname(dirname(dirname(__FILE__))) . DS . "registrars" . DS . "Man
 
 use WHMCS\Domains\DomainLookup\ResultsList;
 use WHMCS\Domains\DomainLookup\SearchResult;
-use WHMCS\Module\Registrar\Registrarmodule\ApiClient;
+use WHMCS\Module\Registrar\Manage_Domain\ApiClient;
 
 
 function Manage_Domain_MetaData()
 {
     return array(
         'DisplayName' => 'Manage Domain Registeration',
-        'APIVersion' => '1.0',
+        'APIVersion' => '1.0.2',
     );
 }
 
