@@ -76,13 +76,7 @@ function Manage_Domain_activate()
         ]);
 
         $field = '
-$additionaldomainfields[".ir"][] = array("Name" => "nichandle","DisplayName" => "NIC-Handle","Type" => "text","Size" => "15","Default" => "","Required" => true,);
-$additionaldomainfields[".co.ir"][] =$additionaldomainfields[".ir"][];
-$additionaldomainfields[".id.ir"][] =$additionaldomainfields[".ir"][];
-$additionaldomainfields[".org.ir"][] =$additionaldomainfields[".ir"][];
-$additionaldomainfields[".ac.ir"][] =$additionaldomainfields[".ir"][];
-$additionaldomainfields[".co.ir"][] =$additionaldomainfields[".ir"][];
-';
+$additionaldomainfields[".co.ir"][]= $additionaldomainfields[".id.ir"][]= $additionaldomainfields[".org.ir"][]= $additionaldomainfields[".ac.ir"][]= $additionaldomainfields[".co.ir"][]= $additionaldomainfields[".ir"][] = array("Name" => "nichandle","DisplayName" => "NIC-Handle","Type" => "text","Size" => "15","Default" => "","Required" => true,);';
         $customFieldsFile = fopen(getcwd() . "/../resources/domains/dist.additionalfields.php", 'a');
         fwrite($customFieldsFile, $field);
         fclose($customFieldsFile);

@@ -430,7 +430,7 @@ function Manage_Domain_GetRegistrarLock($params)
     $api->get()->call('GetLockStatus', $params);
     if ($api->status) {
         if (isset($api->results['response']['LockStatus'])) {
-            if ($api->results['response']['LockStatus'] === true || $api->results['response']['LockStatus'] == "true") {
+            if ($api->results['response']['LockStatus'] === true || $api->results['response']['LockStatus'] == "true" || $api->results['response']['LockStatus'] == "1" || $api->results['response']['LockStatus'] == 1) {
                 $values = "locked";
             } else {
                 $values = "unlocked";
