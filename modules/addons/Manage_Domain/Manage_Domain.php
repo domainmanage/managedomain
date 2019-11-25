@@ -75,18 +75,6 @@ function Manage_Domain_activate()
             "value" => $defaultCurrency->id
         ]);
 
-        $field = '
-$additionaldomainfields[".ir"][] = array("Name" => "nichandle","DisplayName" => "NIC-Handle","Type" => "text","Size" => "15","Default" => "","Required" => true,);
-$additionaldomainfields[".co.ir"][] =$additionaldomainfields[".ir"][];
-$additionaldomainfields[".id.ir"][] =$additionaldomainfields[".ir"][];
-$additionaldomainfields[".org.ir"][] =$additionaldomainfields[".ir"][];
-$additionaldomainfields[".ac.ir"][] =$additionaldomainfields[".ir"][];
-$additionaldomainfields[".co.ir"][] =$additionaldomainfields[".ir"][];
-';
-        $customFieldsFile = fopen(getcwd() . "/../resources/domains/dist.additionalfields.php", 'a');
-        fwrite($customFieldsFile, $field);
-        fclose($customFieldsFile);
-
     } catch (\Exception $e) {
         return array('status' => 'error', 'description' => 'error in create table for module');
     }
