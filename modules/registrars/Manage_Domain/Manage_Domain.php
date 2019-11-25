@@ -7,11 +7,12 @@ if (!defined("WHMCS")) {
 if (!defined('DS'))
     define('DS', DIRECTORY_SEPARATOR);
 
-require_once(dirname(dirname(dirname(__FILE__))) . DS . "registrars" . DS . "Manage_Domain" . DS . 'libs' . DS . 'ApiClient.php');
+//require_once(dirname(dirname(dirname(__FILE__))) . DS . "registrars" . DS . "Manage_Domain" . DS . 'libs' . DS . 'ApiClient.php');
+require_once __DIR__ . '/vendor/autoload.php';
 
 use WHMCS\Domains\DomainLookup\ResultsList;
 use WHMCS\Domains\DomainLookup\SearchResult;
-use WHMCS\Module\Registrar\Manage_Domain\ApiClient;
+use ManageDomainLibs\ApiClient;
 
 
 function Manage_Domain_MetaData()
@@ -430,7 +431,7 @@ function Manage_Domain_GetRegistrarLock($params)
     $api->get()->call('GetLockStatus', $params);
     if ($api->status) {
         if (isset($api->results['response']['LockStatus'])) {
-            if ($api->results['response']['LockStatus'] === true || $api->results['response']['LockStatus'] == "true" || $api->results['response']['LockStatus'] == "1" || $api->results['response']['LockStatus'] == 1) {
+            if ($api->results['response']['LockStatus'] === true || $api->results['response']['LockStatus'] == "true") {
                 $values = "locked";
             } else {
                 $values = "unlocked";

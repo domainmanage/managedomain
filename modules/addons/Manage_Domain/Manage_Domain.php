@@ -1,8 +1,8 @@
 <?php
 
 include(__DIR__ . "/vendor/autoload.php");
-$lang = dirname(__FILE__) . DS . '/libs/ApiClient.php';
-include($lang);
+//$lang = dirname(__FILE__) . DS . '/libs/ApiClient.php';
+//include($lang);
 
 use ManageDomain\Entity\Manager;
 use ManageDomain\ApiClient;
@@ -76,7 +76,13 @@ function Manage_Domain_activate()
         ]);
 
         $field = '
-$additionaldomainfields[".co.ir"][]= $additionaldomainfields[".id.ir"][]= $additionaldomainfields[".org.ir"][]= $additionaldomainfields[".ac.ir"][]= $additionaldomainfields[".co.ir"][]= $additionaldomainfields[".ir"][] = array("Name" => "nichandle","DisplayName" => "NIC-Handle","Type" => "text","Size" => "15","Default" => "","Required" => true,);';
+$additionaldomainfields[".ir"][] = array("Name" => "nichandle","DisplayName" => "NIC-Handle","Type" => "text","Size" => "15","Default" => "","Required" => true,);
+$additionaldomainfields[".co.ir"][] =$additionaldomainfields[".ir"][];
+$additionaldomainfields[".id.ir"][] =$additionaldomainfields[".ir"][];
+$additionaldomainfields[".org.ir"][] =$additionaldomainfields[".ir"][];
+$additionaldomainfields[".ac.ir"][] =$additionaldomainfields[".ir"][];
+$additionaldomainfields[".co.ir"][] =$additionaldomainfields[".ir"][];
+';
         $customFieldsFile = fopen(getcwd() . "/../resources/domains/dist.additionalfields.php", 'a');
         fwrite($customFieldsFile, $field);
         fclose($customFieldsFile);
@@ -102,79 +108,114 @@ function Manage_Domain_deactivate()
 
 function Manage_Domain_clientarea($vars)
 {
-    $api = new ApiClient();
-
-
     $language = strtolower($_SESSION['Language']);
     $lang = dirname(__FILE__) . DS . 'lang' . DS . $language . '.php';
     if (!file_exists($lang))
         $lang = dirname(__FILE__) . DS . 'lang' . DS . 'farsi.php';
+
     include($lang);
-    $client = Manage_Domain_GetClientsDetails($_SESSION["uid"]);
-    $vars['email'] = $client["email"];
-    $result = $api->get()->call("validateUser", $vars);
-    if ($result['result'] == "success") {
-        $configs = DB::table("mod_MD_configs")->pluck("value", 'key');
 
-        if (!isset($_GET["type"]) || $_GET["type"] != "pricetype") {
-            if (!isset($configs["pricetype"]) && $configs["pricetype"] == '') {
-                header('Location: index.php?m=Manage_Domain&Status=error&type=pricetype');
-                die;
-            }
-        }
-
-        if (isset($_GET["amount"])) {
-            $_GET["amount"] = str_replace(',', '', $_GET["amount"]);
-
-            if (!intval($_GET['amount'])) {
-                header('Location: index.php?m=Manage_Domain&Status=error&balance=intval');
-                die;
-            }
-            $credit = $client["credit"];
-            if ($credit < $_GET["amount"]) {
-                header('Location: index.php?m=Manage_Domain&Status=error&balance=low');
-                die;
-            }
-            $api = DB::table("tblregistrars")->where('registrar', 'Manage_Domain')->pluck('value', 'setting');
-            $configs = DB::table("mod_MD_configs")->pluck('value', 'key');
-            $parameters = [
-                'amount' => $_GET["amount"],
-                'email' => $_GET["email"],
-                'pricetype' => $configs["pricetype"],
-                'ApiUrl' => Manage_Domain_DecryptPassword($api["ApiUrl"])["password"],
-                'ApiKey' => Manage_Domain_DecryptPassword($api["ApiKey"])["password"],
-                'client' => $client
-            ];
-            Manage_Domain_ChargeAccount($parameters);
-        }
-
+    if (isset($_REQUEST['request']) && $_REQUEST['request'] == "nic") {
         return array(
-            'pagetitle' => $_LANG["title"],
-            'breadcrumb' => array('index.php?m=Manage_Domain' => $_LANG["domain"]),
-            'templatefile' => 'clienthome',
-            'requirelogin' => true,
+            'pagetitle' => $_LANG["createnichandle"],
+            'breadcrumb' => array('index.php?m=Manage_Domain&request=nic' => $_LANG["createnichandle"]),
+            'templatefile' => 'irnicguide',
             'forcessl' => false,
+            'requirelogin' => false,
             'vars' => array(
-                'status' => $_GET["Status"],
-                'balance' => $_GET["balance"],
-                'type' => $_GET['type'],
-                "lang" => $_LANG,
-                'email' => $client["email"],
-                'userBalance' => $client["credit"],
-                'currency_code' => $client["currency_code"]
+                'imageUrl' => "modules/addons/Manage_Domain/templates/images",
             ),
         );
-    } else {
+
+    } else if (isset($_REQUEST['request']) && $_REQUEST['request'] == "handlesetting") {
+
         return array(
-            'pagetitle' => $_LANG["usernotfound"],
-            'breadcrumb' => array('index.php?m=Manage_Domain' => $_LANG["domain"]),
-            'templatefile' => 'error',
-            'requirelogin' => true,
+            'pagetitle' => $_LANG["nichandlesetting"],
+            'breadcrumb' => array('index.php?m=Manage_Domain&request=handlesetting' => $_LANG["nichandlesetting"]),
+            'templatefile' => 'nichandlesetting',
             'forcessl' => false,
+            'requirelogin' => false,
             'vars' => array(
-                'lang' => $_LANG
-            )
+                'imageUrl' => "modules/addons/Manage_Domain/templates/images",
+            ),
         );
+
+    } else {
+        $api = new ApiClient();
+
+        $language = strtolower($_SESSION['Language']);
+        $lang = dirname(__FILE__) . DS . 'lang' . DS . $language . '.php';
+        if (!file_exists($lang))
+            $lang = dirname(__FILE__) . DS . 'lang' . DS . 'farsi.php';
+
+        include($lang);
+
+        $client = Manage_Domain_GetClientsDetails($_SESSION["uid"]);
+        $vars['email'] = $client["email"];
+        $result = $api->get()->call("validateUser", $vars);
+        if ($result['result'] == "success") {
+            $configs = DB::table("mod_MD_configs")->pluck("value", 'key');
+
+            if (!isset($_GET["type"]) || $_GET["type"] != "pricetype") {
+                if (!isset($configs["pricetype"]) && $configs["pricetype"] == '') {
+                    header('Location: index.php?m=Manage_Domain&Status=error&type=pricetype');
+                    die;
+                }
+            }
+
+            if (isset($_GET["amount"])) {
+                $_GET["amount"] = str_replace(',', '', $_GET["amount"]);
+
+                if (!intval($_GET['amount'])) {
+                    header('Location: index.php?m=Manage_Domain&Status=error&balance=intval');
+                    die;
+                }
+                $credit = $client["credit"];
+                if ($credit < $_GET["amount"]) {
+                    header('Location: index.php?m=Manage_Domain&Status=error&balance=low');
+                    die;
+                }
+                $api = DB::table("tblregistrars")->where('registrar', 'Manage_Domain')->pluck('value', 'setting');
+                $configs = DB::table("mod_MD_configs")->pluck('value', 'key');
+                $parameters = [
+                    'amount' => $_GET["amount"],
+                    'email' => $_GET["email"],
+                    'pricetype' => $configs["pricetype"],
+                    'ApiUrl' => Manage_Domain_DecryptPassword($api["ApiUrl"])["password"],
+                    'ApiKey' => Manage_Domain_DecryptPassword($api["ApiKey"])["password"],
+                    'client' => $client
+                ];
+                Manage_Domain_ChargeAccount($parameters);
+            }
+
+            return array(
+                'pagetitle' => $_LANG["title"],
+                'breadcrumb' => array('index.php?m=Manage_Domain' => $_LANG["domain"]),
+                'templatefile' => 'clienthome',
+                'requirelogin' => true,
+                'forcessl' => false,
+                'vars' => array(
+                    'status' => $_GET["Status"],
+                    'balance' => $_GET["balance"],
+                    'type' => $_GET['type'],
+                    "lang" => $_LANG,
+                    'email' => $client["email"],
+                    'userBalance' => $client["credit"],
+                    'currency_code' => $client["currency_code"]
+                ),
+            );
+        } else {
+            return array(
+                'pagetitle' => $_LANG["usernotfound"],
+                'breadcrumb' => array('index.php?m=Manage_Domain' => $_LANG["domain"]),
+                'templatefile' => 'error',
+                'requirelogin' => true,
+                'forcessl' => false,
+                'vars' => array(
+                    'lang' => $_LANG
+                )
+            );
+        }
     }
 }
 
@@ -482,11 +523,11 @@ function Manage_Domain_output($vars)
     if ($pagecount < 1) {
         $transactions = DB::table("mod_MD_transactions")->join('tblclients', 'mod_MD_transactions.userid', '=', 'tblclients.id')
             ->select('mod_MD_transactions.created_at as date', 'mod_MD_transactions.*', 'tblclients.firstname', 'tblclients.lastname')
-            ->limit($limit)->get();
+            ->limit($limit)->orderBy("id", "DESC")->get();
     } else {
         $transactions = DB::table("mod_MD_transactions")->join('tblclients', 'mod_MD_transactions.userid', '=', 'tblclients.id')
             ->select('mod_MD_transactions.created_at as date', 'mod_MD_transactions.*', 'tblclients.firstname', 'tblclients.lastname')
-            ->offset($start_from)->limit($limit)->get();
+            ->offset($start_from)->limit($limit)->orderBy("id", "DESC")->get();
     }
 
 

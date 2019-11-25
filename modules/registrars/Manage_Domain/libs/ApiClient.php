@@ -1,7 +1,8 @@
 <?php
 
-namespace WHMCS\Module\Registrar\Manage_Domain;
+namespace ManageDomainLibs;
 
+use WHMCS\Database\Capsule as DB;
 
 class ApiClient
 {
@@ -170,5 +171,42 @@ class ApiClient
     {
         $this->method = "PUT";
         return $this;
+    }
+
+    public function decryptor($password)
+    {
+        $command = 'DecryptPassword';
+        $postData = array(
+            'password2' => $password,
+        );
+        $results = localAPI($command, $postData);
+        return $results;
+    }
+
+
+    public function checkNicHandle($nicHandle)
+    {
+        $res = DB::table("tblregistrars")->where("registrar", "Manage_Domain")->pluck('value', 'setting');
+        $ApiUrl = $this->decryptor($res["ApiUrl"])["password"];
+        $ApiKey = $this->decryptor($res["ApiKey"])["password"];
+
+        $params = array(
+            "ApiUrl" => $ApiUrl,
+            "ApiKey" => $ApiKey,
+            "handle" => $nicHandle,
+        );
+
+        $apiResult = $this->get()->call('checkregisternichandle', $params);
+        if ($apiResult['result'] == "success") {
+            $resultArray = array(
+                "valid" => true,
+            );
+        } else {
+            $resultArray = array(
+                "valid" => false,
+                "code" => $apiResult['message'][0],
+            );
+        }
+        return $resultArray;
     }
 }
