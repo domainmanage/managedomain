@@ -19,7 +19,7 @@ function Manage_Domain_MetaData()
 {
     return array(
         'DisplayName' => 'Manage Domain Registeration',
-        'APIVersion' => '1.0.2',
+        'APIVersion' => '1.1.1',
     );
 }
 
