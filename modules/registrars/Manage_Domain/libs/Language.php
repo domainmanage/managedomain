@@ -1,7 +1,7 @@
 <?php
-
-
 namespace ManageDomainLibs;
+
+use WHMCS\Config\Setting;
 
 class Language
 {
