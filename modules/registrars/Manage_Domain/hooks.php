@@ -10,13 +10,18 @@ add_hook('ShoppingCartValidateDomainsConfig', 1, function ($vars) {
     if ($vars['a'] == "confdomains") {
         $checkNicHandleStatus = new ApiClient();
         $resultArray = array();
+
         foreach ($vars['domainfield'] as $customField) {
             if (key_exists("nichandle", $customField)) {
                 if (empty($customField['nichandle'])) {
                     return false;
                 }
+                
+                
                 preg_match('/^[a-z]{2}[0-9]\d+-irnic/', $customField['nichandle'], $matches);
-                if (count($matches) == 1) {
+                
+                
+                if (count($matches) == 1 || filter_var($customField['nichandle'],FILTER_VALIDATE_EMAIL)) {
                     $status = $checkNicHandleStatus->checkNicHandle($customField['nichandle']);
 
                     if (!$status['valid']) {
