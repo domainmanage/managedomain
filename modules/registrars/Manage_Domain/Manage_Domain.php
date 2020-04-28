@@ -19,7 +19,7 @@ function Manage_Domain_MetaData()
 {
     return array(
         'DisplayName' => 'Manage Domain Registeration',
-        'APIVersion' => '1.1.1',
+        'APIVersion' => '1.1.2',
     );
 }
 
@@ -50,6 +50,7 @@ function Manage_Domain_getConfigArray()
 
 function Manage_Domain_RegisterDomain($params)
 {
+    
     try {
         $api = new ApiClient();
         $api->post()->call('RegisterDomain', $params);
@@ -356,14 +357,13 @@ function Manage_Domain_CheckAvailability($params)
                 $status = SearchResult::STATUS_TLD_NOT_SUPPORTED;
             }
             $searchResult->setStatus($status);
-
-            if ($domain['isPremiumName']) {
+	        if ($domain["isPremiumName"] == true) {
                 $searchResult->setPremiumDomain(true);
                 $searchResult->setPremiumCostPricing(
                     array(
                         'register' => $domain['price'],
                         'renew' => $domain['price'],
-                        'CurrencyCode' => 'تومان',
+                        'CurrencyCode' => 'Toman',
                     )
                 );
             }
@@ -382,41 +382,12 @@ function Manage_Domain_CheckAvailability($params)
 
 function Manage_Domain_TransferSync($params)
 {
-    $userIdentifier = $params['API Username'];
-    $apiKey = $params['API Key'];
-    $testMode = $params['Test Mode'];
-    $accountMode = $params['Account Mode'];
-    $emailPreference = $params['Email Preference'];
-    $additionalInfo = $params['Additional Information'];
-
-    $sld = $params['sld'];
-    $tld = $params['tld'];
-
-    $postfields = array(
-        'username' => $userIdentifier,
-        'password' => $apiKey,
-        'testmode' => $testMode,
-        'domain' => $sld . '.' . $tld,
-    );
-
-    try {
+     try {
         $api = new ApiClient();
-        $api->call('CheckDomainTransfer', $postfields);
-
-        if ($api->getFromResponse('transfercomplete')) {
-            return array(
-                'completed' => true,
-                'expirydate' => $api->getFromResponse('expirydate'), // Format: YYYY-MM-DD
-            );
-        } elseif ($api->getFromResponse('transferfailed')) {
-            return array(
-                'failed' => true,
-                'reason' => $api->getFromResponse('failurereason'), // Reason for the transfer failure if available
-            );
-        } else {
-            return array();
-        }
-
+        $api->get()->call('CheckDomainTransfer', $params);
+        
+         return $api->results;
+        
     } catch (\Exception $e) {
         return array(
             'error' => $e->getMessage(),
