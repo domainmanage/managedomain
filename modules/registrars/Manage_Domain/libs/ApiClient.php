@@ -6,12 +6,11 @@ use WHMCS\Database\Capsule as DB;
 
 class ApiClient
 {
-    public $method = "POST";
+    public $method  = "POST";
     public $results = array();
     private $makeUrl;
     public $message = "";
-    public $status = false;
-
+    public $status  = false;
 
     public function generateUrl($action, $url)
     {
@@ -32,9 +31,9 @@ class ApiClient
     public function call($action, $postfields)
     {
         $this->generateUrl($action, $postfields['ApiUrl']);
-        $post = array('params' => $postfields);
+        $post          = array('params' => $postfields);
         $authorization = "Authorization: Bearer " . trim($postfields['ApiKey']);
-        $ch = curl_init();
+        $ch            = curl_init();
         curl_setopt($ch, CURLOPT_URL, $this->makeUrl);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', $authorization, 'Accept: application/json'));
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $this->method);
@@ -62,22 +61,17 @@ class ApiClient
             )
         );
 
-
-        if ($this->results === null && json_last_error() !== JSON_ERROR_NONE) {
-            throw new \Exception('Bad response received from API');
+        if ($this->results['result'] != "error") {
+            $this->status = true;
         } else {
-            if ($this->results['result'] != "error") {
-                $this->status = true;
-            } else {
-                $this->status = false;
-                foreach ($this->results["message"] as $value) {
-                    $this->message .= key($value) . " => " . $value[key($value)];
-                }
+            $this->status = false;
+            foreach ($this->results["message"] as $value) {
+                $this->message .= key($value) . " => " . $value[key($value)];
             }
         }
+
         return $this->results;
     }
-
 
     /**
      * Process API response.
@@ -114,7 +108,6 @@ class ApiClient
         return $this;
     }
 
-
     /**
      * set method
      *
@@ -125,7 +118,6 @@ class ApiClient
         $this->method = "GET";
         return $this;
     }
-
 
     /**
      * set method
@@ -138,7 +130,6 @@ class ApiClient
         return $this;
     }
 
-
     /**
      * set method
      *
@@ -149,7 +140,6 @@ class ApiClient
         $this->method = "PUSH";
         return $this;
     }
-
 
     /**
      * set method
@@ -175,7 +165,7 @@ class ApiClient
 
     public function decryptor($password)
     {
-        $command = 'DecryptPassword';
+        $command  = 'DecryptPassword';
         $postData = array(
             'password2' => $password,
         );
@@ -183,10 +173,31 @@ class ApiClient
         return $results;
     }
 
+    public function getIrnicDomainsStatus($domain)
+    {
+        $res    = DB::table("tblregistrars")->where("registrar", "Manage_Domain")->pluck('value', 'setting');
+        $ApiUrl = $this->decryptor($res["ApiUrl"])["password"];
+        $ApiKey = $this->decryptor($res["ApiKey"])["password"];
+
+        $params = array(
+            "ApiUrl" => $ApiUrl,
+            "ApiKey" => $ApiKey,
+            "domain" => $domain,
+        );
+
+        $apiResult = $this->get()->call('IrnicStatus', $params);
+
+        if ($apiResult['result']) {
+            return $apiResult['message'];
+        } else {
+            return $apiResult["something wrong"];
+        }
+
+    }
 
     public function checkNicHandle($nicHandle)
     {
-        $res = DB::table("tblregistrars")->where("registrar", "Manage_Domain")->pluck('value', 'setting');
+        $res    = DB::table("tblregistrars")->where("registrar", "Manage_Domain")->pluck('value', 'setting');
         $ApiUrl = $this->decryptor($res["ApiUrl"])["password"];
         $ApiKey = $this->decryptor($res["ApiKey"])["password"];
 
@@ -204,7 +215,7 @@ class ApiClient
         } else {
             $resultArray = array(
                 "valid" => false,
-                "code" => $apiResult['message'][0],
+                "code"  => $apiResult['message'][0],
             );
         }
         return $resultArray;

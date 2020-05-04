@@ -553,3 +553,8 @@ function objectToArray($object)
     }
     return $object;
 }
+
+function Manage_Domain_AdminServicesTabFields(array $params)
+{
+    return array("Licenses Errozxczjhckhzjkxcjkhr" => "yesss");
+}
