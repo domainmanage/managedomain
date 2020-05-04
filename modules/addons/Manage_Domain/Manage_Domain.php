@@ -21,7 +21,7 @@ function Manage_Domain_config()
     $configarray = array(
         "name" => "Manage Domain",
         "description" => "Manage domain Addons",
-        "version" => "1.1.2",
+        "version" => "1.2.0",
         "author" => "Great world Lovers",
     );
     return $configarray;
